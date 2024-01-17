@@ -11,7 +11,7 @@ define('HTTPS_CATALOG', 'http://opera-211/');
 define('DIR_APPLICATION', 'C:/OSPanel/domains/3.0.2.0-OpenCart/upload/admin/');
 define('DIR_SYSTEM', 'C:/OSPanel/domains/3.0.2.0-OpenCart/upload/system/');
 define('DIR_IMAGE', 'C:/OSPanel/domains/3.0.2.0-OpenCart/upload/image/');
-define('DIR_STORAGE', DIR_SYSTEM . 'storage/');
+define('DIR_STORAGE', 'C:/OSPanel/domains/3.0.2.0-OpenCart/storage/');
 define('DIR_CATALOG', 'C:/OSPanel/domains/3.0.2.0-OpenCart/upload/catalog/');
 define('DIR_LANGUAGE', DIR_APPLICATION . 'language/');
 define('DIR_TEMPLATE', DIR_APPLICATION . 'view/template/');
