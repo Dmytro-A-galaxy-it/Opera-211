@@ -39,4 +39,10 @@ class ModelSettingModule extends Model {
 		$this->db->query("DELETE FROM `" . DB_PREFIX . "module` WHERE `code` = '" . $this->db->escape($code) . "'");
 		$this->db->query("DELETE FROM `" . DB_PREFIX . "layout_module` WHERE `code` LIKE '" . $this->db->escape($code) . "' OR `code` LIKE '" . $this->db->escape($code . '.%') . "'");
 	}	
+
+	public function isModuleExist($code) {
+        $query = $this->db->query("SELECT COUNT(*) AS total FROM " . DB_PREFIX . "module WHERE code = '" . $this->db->escape($code) . "'");
+
+        return $query->row['total'];
+    }
 }

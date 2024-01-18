@@ -10,4 +10,6 @@ $_['entry_count']     = 'Count day';
 $_['entry_status']     = 'Status';
 
 //Error
-$_['error_name']       = 'Module Name must be between 3 and 64 characters!';
+$_['error_empty_field'] = 'Error: The field cannot be empty.';
+$_['error_not_numeric'] = 'Error: The field must contain only numeric value.';
+$_['error_negative_value'] = 'Error: The field cannot be negative.';

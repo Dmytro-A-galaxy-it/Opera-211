@@ -7,14 +7,10 @@ class ControllerExtensionModuleAutoClient extends Controller {
 
         $this->document->setTitle($this->language->get('heading_title'));
 
-        $this->load->model('setting/module');
+		$this->load->model('setting/setting');
 
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
-			if (!isset($this->request->get['module_id'])) {
-				$this->model_setting_module->addModule('auto_client', $this->request->post);
-			} else {
-				$this->model_setting_module->editModule($this->request->get['module_id'], $this->request->post);
-			}
+			$this->model_setting_setting->editSetting('auto_client', $this->request->post);
 
 			$this->session->data['success'] = $this->language->get('text_success');
 
@@ -27,16 +23,24 @@ class ControllerExtensionModuleAutoClient extends Controller {
 			$data['error_warning'] = '';
 		}
 
-		if (isset($this->error['name'])) {
-			$data['error_name'] = $this->error['name'];
+        if (isset($this->error['auto_client_count'])) {
+			if (empty($this->request->post['auto_client_count'])) {
+				$data['error_empty_field'] = $this->error['auto_client_count'];
+				$data['error_not_numeric'] = '';
+				$data['error_negative_value'] = '';
+			} elseif (!is_numeric($this->request->post['auto_client_count'])) {
+				$data['error_empty_field'] = '';
+				$data['error_not_numeric'] = $this->error['auto_client_count'];
+				$data['error_negative_value'] = '';
+			} elseif ($this->request->post['auto_client_count'] < 0) {
+				$data['error_empty_field'] = ''; 
+				$data['error_not_numeric'] = '';  
+				$data['error_negative_value'] = $this->error['auto_client_count'];
+			}
 		} else {
-			$data['error_name'] = '';
-		}
-
-        if (isset($this->error['count'])) {
-			$data['error_count'] = $this->error['count'];
-		} else {
-			$data['error_count'] = '';
+			$data['error_empty_field'] = '';
+			$data['error_not_numeric'] = '';
+			$data['error_negative_value'] = '';
 		}
 
         $data['breadcrumbs'] = array();
@@ -51,45 +55,26 @@ class ControllerExtensionModuleAutoClient extends Controller {
 			'href' => $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=module', true)
 		);
 
-		if (!isset($this->request->get['module_id'])) {
-			$data['breadcrumbs'][] = array(
-				'text' => $this->language->get('heading_title'),
-				'href' => $this->url->link('extension/module/auto_client', 'user_token=' . $this->session->data['user_token'], true)
-			);
-		} else {
-			$data['breadcrumbs'][] = array(
-				'text' => $this->language->get('heading_title'),
-				'href' => $this->url->link('extension/module/auto_client', 'user_token=' . $this->session->data['user_token'] . '&module_id=' . $this->request->get['module_id'], true)
-			);
-		}
-
-		if (!isset($this->request->get['module_id'])) {
-			$data['action'] = $this->url->link('extension/module/auto_client', 'user_token=' . $this->session->data['user_token'], true);
-		} else {
-			$data['action'] = $this->url->link('extension/module/auto_client', 'user_token=' . $this->session->data['user_token'] . '&module_id=' . $this->request->get['module_id'], true);
-		}
-
+		$data['breadcrumbs'][] = array(
+			'text' => $this->language->get('heading_title'),
+			'href' => $this->url->link('extension/module/auto_client', 'user_token=' . $this->session->data['user_token'], true)
+		);
+		
+		$data['action'] = $this->url->link('extension/module/auto_client', 'user_token=' . $this->session->data['user_token'], true);
+			
 		$data['cancel'] = $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=module', true);
 
-		if (isset($this->request->get['module_id']) && ($this->request->server['REQUEST_METHOD'] != 'POST')) {
-			$module_info = $this->model_setting_module->getModule($this->request->get['module_id']);
+		if (isset($this->request->post['auto_client_status'])) {
+			$data['auto_client_status'] = $this->request->post['auto_client_status'];
+		} else {
+			$data['auto_client_status'] = $this->config->get('auto_client_status');
 		}
 
-		if (isset($this->request->post['name'])) {
-			$data['name'] = $this->request->post['name'];
-		} elseif (!empty($module_info)) {
-			$data['name'] = $module_info['name'];
+        if (isset($this->request->post['auto_client_count'])) {
+			$data['auto_client_count'] = $this->request->post['auto_client_count'];
 		} else {
-			$data['name'] = '';
-		}
-
-        if (isset($this->request->post['count'])) {
-			$data['count'] = $this->request->post['count'];
-		} elseif (!empty($module_info)) {
-			$data['count'] = $module_info['count'];
-		} else {
-			$data['count'] = '';
-		}
+			$data['auto_client_count'] = $this->config->get('auto_client_count');
+		} 
         
         $data['header'] = $this->load->controller('common/header');
 		$data['column_left'] = $this->load->controller('common/column_left');
@@ -99,13 +84,17 @@ class ControllerExtensionModuleAutoClient extends Controller {
     }
 
     protected function validate() {
-		if (!$this->user->hasPermission('modify', 'extension/module/auto_client/auto_client')) {
+		if (!$this->user->hasPermission('modify', 'extension/module/auto_client')) {
 			$this->error['warning'] = $this->language->get('error_permission');
 		}
 
-		if ((utf8_strlen($this->request->post['name']) < 3) || (utf8_strlen($this->request->post['name']) > 64)) {
-			$this->error['name'] = $this->language->get('error_name');
-		}
+		if (empty($this->request->post['auto_client_count'])) {
+            $this->error['auto_client_count'] =$this->language->get('error_empty_field');
+        } elseif (!is_numeric($this->request->post['auto_client_count'])) {
+            $this->error['auto_client_count'] = $this->language->get('error_not_numeric');
+        } elseif ($this->request->post['auto_client_count'] < 0) {
+            $this->error['auto_client_count'] = $this->language->get('error_negative_value');
+        }
 
 		return !$this->error;
 	}

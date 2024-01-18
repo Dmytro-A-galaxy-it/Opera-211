@@ -26,29 +26,27 @@
       </div>
       <div class="panel-body">
         <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-module" class="form-horizontal">
-          <div class="form-group">
-            <label class="col-sm-2 control-label" for="input-name">{{ entry_name }}</label>
-            <div class="col-sm-10">
-              <input type="text" name="name" value="{{ name }}" placeholder="{{ entry_name }}" id="input-name" class="form-control" />
-              {% if error_name %}
-              <div class="text-danger">{{ error_name }}</div>
-              {% endif %}
-            </div>
-          </div>
+          
           <div class="form-group">
             <label class="col-sm-2 control-label" for="input-name">{{ entry_count }}</label>
             <div class="col-sm-10">
-              <input type="text" name="count" value="{{ count }}" placeholder="{{ entry_count }}" id="input-count" class="form-control" />
-              {% if error_count %}
-              <div class="text-danger">{{ error_count }}</div>
+              <input type="text" name="auto_client_count" value="{{ auto_client_count }}" placeholder="{{ entry_count }}" id="input-count" class="form-control"  />
+              {% if error_empty_field %}
+              <div class="text-danger">{{ error_empty_field }}</div>
+              {% endif %}
+              {% if error_not_numeric %}
+              <div class="text-danger">{{ error_not_numeric }}</div>
+              {% endif %}
+              {% if error_negative_value %}
+              <div class="text-danger">{{ error_negative_value }}</div>
               {% endif %}
             </div>
           </div>
           <div class="form-group">
             <label class="col-sm-2 control-label" for="input-status">{{ entry_status }}</label>
             <div class="col-sm-10">
-              <select name="module_auto_client_status" id="input-status" class="form-control">
-                {% if module_auto_client_status %}
+              <select name="auto_client_status" id="input-status" class="form-control">
+                {% if auto_client_status %}
                 <option value="1" selected="selected">{{ text_enabled }}</option>
                 <option value="0">{{ text_disabled }}</option>
                 {% else %}
