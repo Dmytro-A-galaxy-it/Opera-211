@@ -41,10 +41,22 @@ class ControllerAccountLogin extends Controller {
 			}
 		}
 
-		if ($this->customer->isLogged()) {
-			$this->response->redirect($this->url->link('account/account', '', true));
-		}
+		if ($this->customer->isLogged() && $this->config->get('auto_client_count')) {
+			$customer_id = $this->customer->getId();
+			$last_days_orders = $this->config->get('auto_client_count'); 
+			
+			$this->load->model('account/order');
+		
+			$order_count = $this->model_account_order->getTotalOrdersByCustomerId($customer_id, $last_days_orders);
+		
+			if ($order_count == 0) {
+				$this->load->model('account/customer');
+				$this->model_account_customer->editStatus($customer_id, array('status' => 0));
 
+				$this->session->data['warning'] = sprintf($this->language->get('text_account_disabled'), $last_days_orders);
+			}
+		}
+		
 		$this->load->language('account/login');
 
 		$this->document->setTitle($this->language->get('heading_title'));
@@ -78,9 +90,10 @@ class ControllerAccountLogin extends Controller {
 			// Added strpos check to pass McAfee PCI compliance test (http://forum.opencart.com/viewtopic.php?f=10&t=12043&p=151494#p151295)
 			if (isset($this->request->post['redirect']) && $this->request->post['redirect'] != $this->url->link('account/logout', '', true) && (strpos($this->request->post['redirect'], $this->config->get('config_url')) !== false || strpos($this->request->post['redirect'], $this->config->get('config_ssl')) !== false)) {
 				$this->response->redirect(str_replace('&amp;', '&', $this->request->post['redirect']));
-			} else {
+			} else{
 				$this->response->redirect($this->url->link('account/account', '', true));
 			}
+			
 		}
 
 		$data['breadcrumbs'] = array();
@@ -167,7 +180,8 @@ class ControllerAccountLogin extends Controller {
 		$customer_info = $this->model_account_customer->getCustomerByEmail($this->request->post['email']);
 
 		if ($customer_info && !$customer_info['status']) {
-			$this->error['warning'] = $this->language->get('error_approved');
+			$last_days_orders = $this->config->get('auto_client_count');
+			$this->error['warning'] = sprintf($this->language->get('text_account_disabled'), $last_days_orders);
 		}
 
 		if (!$this->error) {

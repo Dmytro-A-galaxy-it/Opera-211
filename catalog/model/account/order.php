@@ -167,4 +167,10 @@ class ModelAccountOrder extends Model {
 
 		return $query->row['total'];
 	}
+
+	public function getTotalOrdersByCustomerId($customer_id, $last_days) {
+        $query = $this->db->query("SELECT COUNT(*) AS total FROM " . DB_PREFIX . "order WHERE customer_id = '" . (int)$customer_id . "' AND date_added >= NOW() - INTERVAL " . (int)$last_days . " DAY");
+
+        return $query->row['total'];
+    }
 }

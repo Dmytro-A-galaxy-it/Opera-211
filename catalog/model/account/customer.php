@@ -25,6 +25,10 @@ class ModelAccountCustomer extends Model {
 	public function editCustomer($customer_id, $data) {
 		$this->db->query("UPDATE " . DB_PREFIX . "customer SET firstname = '" . $this->db->escape($data['firstname']) . "', lastname = '" . $this->db->escape($data['lastname']) . "', email = '" . $this->db->escape($data['email']) . "', telephone = '" . $this->db->escape($data['telephone']) . "', custom_field = '" . $this->db->escape(isset($data['custom_field']['account']) ? json_encode($data['custom_field']['account']) : '') . "' WHERE customer_id = '" . (int)$customer_id . "'");
 	}
+	
+	public function editStatus($customer_id, $data) {
+		$this->db->query("UPDATE " . DB_PREFIX . "customer SET status = '" . $this->db->escape($data['status']) . "' WHERE customer_id = '" . (int)$customer_id . "'");
+	}
 
 	public function editPassword($email, $password) {
 		$this->db->query("UPDATE " . DB_PREFIX . "customer SET salt = '" . $this->db->escape($salt = token(9)) . "', password = '" . $this->db->escape(sha1($salt . sha1($salt . sha1($password)))) . "', code = '' WHERE LOWER(email) = '" . $this->db->escape(utf8_strtolower($email)) . "'");
