@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+    <name>ModuleOC by Galaxy IT</name>
+    <code>jakim_off_module_cron</code>
+    <version>1.03</version>
+    <author><![CDATA[<img src=\"https://galaxy-it.net/g.svg\" width=\"120px\"/>]]></author>
+    <link>https://galaxy-it.net/</link>
+    <file path="catalog/controller/account/login.php">
+        <operation>
+            <search><![CDATA[
+            if ($this->customer->isLogged()) {
+            ]]></search>
+
+            <add position="replace" offset = "3" limit="1"><![CDATA[
+                if ($this->customer->isLogged() && $this->config->get('auto_client_count')) {
+                    $customer_id = $this->customer->getId();
+                    $last_days_orders = $this->config->get('auto_client_count'); 
+
+                    $this->load->model('account/order');
+
+                    $order_count = $this->model_account_order->getTotalOrdersByCustomerId($customer_id, $last_days_orders);
+
+                    if ($order_count == 0) {
+                        $this->load->model('account/customer');
+                        $this->model_account_customer->editStatus($customer_id, array('status' => 0));
+
+                        $this->session->data['warning'] = sprintf($this->language->get('text_account_disabled'), $last_days_orders);
+                    }
+                }
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[
+            $this->error['warning'] = $this->language->get('error_approved');
+            ]]></search>
+
+            <add position="replace" limit="1"><![CDATA[
+                $last_days_orders = $this->config->get('auto_client_count');
+			    $this->error['warning'] = sprintf($this->language->get('text_account_disabled'), $last_days_orders);
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/controller/startup/startup.php">
+        <operation>
+            <search><![CDATA[if (isset($this->session->data['shipping_address'])) {]]></search>
+            <add position="replace"><![CDATA[ 
+			if (isset($this->session->data['shipping_address']['country_id']) && isset($this->session->data['shipping_address']['zone_id'])) {
+		]]></add>
+        </operation>
+    </file>
+    <file path="catalog/language/en-gb/account/login.php">
+        <operation>
+            <search><![CDATA[$_['error_approved']               = 'Warning: Your account requires approval before you can login.';]]></search>
+            <add position="replace"><![CDATA[ 
+			$_['error_approved']               = 'Warning: Your account requires approval before you can login.';
+            $_['text_account_disabled']        = 'Your account has been disabled due to outgoing orders for %s days. For activation, contact the administration.';
+		]]></add>
+        </operation>
+    </file>
+    <file path="catalog/model/account/customer.php">
+        <operation>
+            <search><![CDATA[public function editPassword($email, $password) {]]></search>
+            <add position="before"><![CDATA[ 
+		public function editStatus($customer_id, $data) {
+		    $this->db->query("UPDATE " . DB_PREFIX . "customer SET status = '" . $this->db->escape($data['status']) . "' WHERE customer_id = '" . (int)$customer_id . "'");
+	    }
+		]]></add>
+        </operation>
+    </file>
+    <file path="catalog/model/account/order.php">
+        <operation>
+            <search><![CDATA[public function getTotalOrderVouchersByOrderId($order_id) {]]></search>
+            <add position="before"><![CDATA[ 
+			public function getTotalOrdersByCustomerId($customer_id, $last_days) {
+        $query = $this->db->query("SELECT COUNT(*) AS total FROM " . DB_PREFIX . "order WHERE customer_id = '" . (int)$customer_id . "' AND date_added >= NOW() - INTERVAL " . (int)$last_days . " DAY");
+
+        return $query->row['total'];
+    }
+		]]></add>
+        </operation>
+    </file>
+</modification>
