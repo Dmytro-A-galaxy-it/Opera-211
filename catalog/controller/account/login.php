@@ -41,21 +41,10 @@ class ControllerAccountLogin extends Controller {
 			}
 		}
 
-		if ($this->customer->isLogged() && $this->config->get('auto_client_count')) {
-			$customer_id = $this->customer->getId();
-			$last_days_orders = $this->config->get('auto_client_count'); 
-			
-			$this->load->model('account/order');
-		
-			$order_count = $this->model_account_order->getTotalOrdersByCustomerId($customer_id, $last_days_orders);
-		
-			if ($order_count == 0) {
-				$this->load->model('account/customer');
-				$this->model_account_customer->editStatus($customer_id, array('status' => 0));
-
-				$this->session->data['warning'] = sprintf($this->language->get('text_account_disabled'), $last_days_orders);
-			}
+		if ($this->customer->isLogged()) {
+			$this->response->redirect($this->url->link('account/account', '', true));
 		}
+		
 		
 		$this->load->language('account/login');
 
@@ -169,6 +158,7 @@ class ControllerAccountLogin extends Controller {
 	}
 
 	protected function validate() {
+		
 		// Check how many login attempts have been made.
 		$login_info = $this->model_account_customer->getLoginAttempts($this->request->post['email']);
 
@@ -180,8 +170,7 @@ class ControllerAccountLogin extends Controller {
 		$customer_info = $this->model_account_customer->getCustomerByEmail($this->request->post['email']);
 
 		if ($customer_info && !$customer_info['status']) {
-			$last_days_orders = $this->config->get('auto_client_count');
-			$this->error['warning'] = sprintf($this->language->get('text_account_disabled'), $last_days_orders);
+			$this->error['warning'] = $this->language->get('error_approved');
 		}
 
 		if (!$this->error) {
@@ -191,6 +180,32 @@ class ControllerAccountLogin extends Controller {
 				$this->model_account_customer->addLoginAttempt($this->request->post['email']);
 			} else {
 				$this->model_account_customer->deleteLoginAttempts($this->request->post['email']);
+
+				$customer_id = $this->customer->getId();
+		
+				if($this->config->get('auto_client_count') && $customer_id){
+					$this->load->model('account/order');
+					$last_day_orders = $this->config->get('auto_client_count');
+		
+					$nowDate = new DateTime();
+		
+					$customer_getId = $this->model_account_customer->getCustomer($customer_id);
+					$customerDate = new DateTime($customer_getId['date_added']);
+		
+					$diffDate = $nowDate->diff($customerDate);
+		
+					$diffDateDay = $diffDate->format('%a');
+		
+					$order_count = $this->model_account_order->getTotalOrdersByCustomerId($customer_id, $last_day_orders);
+					if($last_day_orders <= $diffDateDay && $order_count == 0){
+					$this->load->model('account/customer');
+					$this->model_account_customer->editStatus($customer_id, array('status' => 0));
+					
+					$this->error['warning'] = sprintf($this->language->get('text_account_disabled'), $last_day_orders);
+					
+					}
+				}
+				
 			}
 		}
 

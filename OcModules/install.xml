@@ -8,28 +8,37 @@
     <file path="catalog/controller/account/login.php">
         <operation>
             <search><![CDATA[
-            if ($this->customer->isLogged()) {
+            $this->model_account_customer->deleteLoginAttempts($this->request->post['email']);
             ]]></search>
 
-            <add position="replace" offset = "3" limit="1"><![CDATA[
-                if ($this->customer->isLogged() && $this->config->get('auto_client_count')) {
-                    $customer_id = $this->customer->getId();
-                    $last_days_orders = $this->config->get('auto_client_count'); 
-
-                    $this->load->model('account/order');
-
-                    $order_count = $this->model_account_order->getTotalOrdersByCustomerId($customer_id, $last_days_orders);
-
-                    if ($order_count == 0) {
-                        $this->load->model('account/customer');
-                        $this->model_account_customer->editStatus($customer_id, array('status' => 0));
-
-                        $this->session->data['warning'] = sprintf($this->language->get('text_account_disabled'), $last_days_orders);
-                    }
-                }
+            <add position="after" limit="1"><![CDATA[
+                $customer_id = $this->customer->getId();
+		
+				if($this->config->get('auto_client_count') && $customer_id){
+					$this->load->model('account/order');
+					$last_day_orders = $this->config->get('auto_client_count');
+		
+					$nowDate = new DateTime();
+		
+					$customer_getId = $this->model_account_customer->getCustomer($customer_id);
+					$customerDate = new DateTime($customer_getId['date_added']);
+		
+					$diffDate = $nowDate->diff($customerDate);
+		
+					$diffDateDay = $diffDate->format('%a');
+		
+					$order_count = $this->model_account_order->getTotalOrdersByCustomerId($customer_id, $last_day_orders);
+					if($last_day_orders <= $diffDateDay && $order_count == 0){
+					$this->load->model('account/customer');
+					$this->model_account_customer->editStatus($customer_id, array('status' => 0));
+					
+					$this->error['warning'] = sprintf($this->language->get('text_account_disabled'), $last_day_orders);
+					
+					}
+				}
             ]]></add>
         </operation>
-        <operation>
+        <!-- <operation>
             <search><![CDATA[
             $this->error['warning'] = $this->language->get('error_approved');
             ]]></search>
@@ -38,7 +47,7 @@
                 $last_days_orders = $this->config->get('auto_client_count');
 			    $this->error['warning'] = sprintf($this->language->get('text_account_disabled'), $last_days_orders);
             ]]></add>
-        </operation>
+        </operation> -->
     </file>
     <file path="catalog/controller/startup/startup.php">
         <operation>
@@ -51,8 +60,7 @@
     <file path="catalog/language/en-gb/account/login.php">
         <operation>
             <search><![CDATA[$_['error_approved']               = 'Warning: Your account requires approval before you can login.';]]></search>
-            <add position="replace"><![CDATA[ 
-			$_['error_approved']               = 'Warning: Your account requires approval before you can login.';
+            <add position="after"><![CDATA[ 
             $_['text_account_disabled']        = 'Your account has been disabled due to outgoing orders for %s days. For activation, contact the administration.';
 		]]></add>
         </operation>
