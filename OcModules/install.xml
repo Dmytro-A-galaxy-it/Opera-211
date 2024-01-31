@@ -21,7 +21,7 @@
 					$nowDate = new DateTime();
 		
 					$customer_getId = $this->model_account_customer->getCustomer($customer_id);
-					$customerDate = new DateTime($customer_getId['date_added']);
+					$customerDate = new DateTime($customer_getId['date_updated']);
 		
 					$diffDate = $nowDate->diff($customerDate);
 		
@@ -38,16 +38,6 @@
 				}
             ]]></add>
         </operation>
-        <!-- <operation>
-            <search><![CDATA[
-            $this->error['warning'] = $this->language->get('error_approved');
-            ]]></search>
-
-            <add position="replace" limit="1"><![CDATA[
-                $last_days_orders = $this->config->get('auto_client_count');
-			    $this->error['warning'] = sprintf($this->language->get('text_account_disabled'), $last_days_orders);
-            ]]></add>
-        </operation> -->
     </file>
     <file path="catalog/controller/startup/startup.php">
         <operation>
@@ -65,6 +55,14 @@
 		]]></add>
         </operation>
     </file>
+    <file path="admin/language/en-gb/customer/customer.php">
+        <operation>
+            <search><![CDATA[$_['entry_safe']                = 'Safe';]]></search>
+            <add position="after"><![CDATA[ 
+            $_['entry_date_update']         = 'Date Update';
+		]]></add>
+        </operation>
+    </file>
     <file path="catalog/model/account/customer.php">
         <operation>
             <search><![CDATA[public function editPassword($email, $password) {]]></search>
@@ -72,6 +70,38 @@
 		public function editStatus($customer_id, $data) {
 		    $this->db->query("UPDATE " . DB_PREFIX . "customer SET status = '" . $this->db->escape($data['status']) . "' WHERE customer_id = '" . (int)$customer_id . "'");
 	    }
+		]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[ $this->db->query("INSERT INTO " . DB_PREFIX . "customer SET customer_group_id = '" . (int)$customer_group_id . "', store_id = '" . (int)$this->config->get('config_store_id') . "', language_id = '" . (int)$this->config->get('config_language_id') . "', firstname = '" . $this->db->escape($data['firstname']) . "', lastname = '" . $this->db->escape($data['lastname']) . "', email = '" . $this->db->escape($data['email']) . "', telephone = '" . $this->db->escape($data['telephone']) . "', custom_field = '" . $this->db->escape(isset($data['custom_field']['account']) ? json_encode($data['custom_field']['account']) : '') . "', salt = '" . $this->db->escape($salt = token(9)) . "', password = '" . $this->db->escape(sha1($salt . sha1($salt . sha1($data['password'])))) . "', newsletter = '" . (isset($data['newsletter']) ? (int)$data['newsletter'] : 0) . "', ip = '" . $this->db->escape($this->request->server['REMOTE_ADDR']) . "', status = '" . (int)!$customer_group_info['approval'] . "', date_added = NOW()"); ]]></search>
+            <add position="replace"><![CDATA[ 
+            $this->db->query("INSERT INTO " . DB_PREFIX . "customer SET customer_group_id = '" . (int)$customer_group_id . "', store_id = '" . (int)$this->config->get('config_store_id') . "', language_id = '" . (int)$this->config->get('config_language_id') . "', firstname = '" . $this->db->escape($data['firstname']) . "', lastname = '" . $this->db->escape($data['lastname']) . "', email = '" . $this->db->escape($data['email']) . "', telephone = '" . $this->db->escape($data['telephone']) . "', custom_field = '" . $this->db->escape(isset($data['custom_field']['account']) ? json_encode($data['custom_field']['account']) : '') . "', salt = '" . $this->db->escape($salt = token(9)) . "', password = '" . $this->db->escape(sha1($salt . sha1($salt . sha1($data['password'])))) . "', newsletter = '" . (isset($data['newsletter']) ? (int)$data['newsletter'] : 0) . "', ip = '" . $this->db->escape($this->request->server['REMOTE_ADDR']) . "', status = '" . (int)!$customer_group_info['approval'] . "', date_added = NOW(), date_updated = NOW()");
+		]]></add>
+        </operation>
+    </file>
+    <file path="admin/controller/customer/customer.php">
+        <operation>
+            <search><![CDATA[if (isset($this->request->post['password'])) { ]]></search>
+            <add position="before"><![CDATA[ 
+            if (isset($this->request->post['date_updated'])) {
+			$data['date_updated'] = $this->request->post['date_updated'];
+		} else {
+			$data['date_updated'] = $customer_info['date_updated'] ?? date('Y-m-d');
+		}
+		]]></add>
+        </operation>
+    </file>
+    <file path="admin/model/customer/customer.php">
+        <operation>
+            <search><![CDATA[ $this->db->query("INSERT INTO " . DB_PREFIX . "customer SET customer_group_id = '" . (int)$data['customer_group_id'] . "', firstname = '" . $this->db->escape($data['firstname']) . "', lastname = '" . $this->db->escape($data['lastname']) . "', email = '" . $this->db->escape($data['email']) . "', telephone = '" . $this->db->escape($data['telephone']) . "', custom_field = '" . $this->db->escape(isset($data['custom_field']) ? json_encode($data['custom_field']) : json_encode(array())) . "', newsletter = '" . (int)$data['newsletter'] . "', salt = '" . $this->db->escape($salt = token(9)) . "', password = '" . $this->db->escape(sha1($salt . sha1($salt . sha1($data['password'])))) . "', status = '" . (int)$data['status'] . "', safe = '" . (int)$data['safe'] . "', date_added = NOW()"); ]]></search>
+            <add position="replace"><![CDATA[ 
+            $this->db->query("INSERT INTO " . DB_PREFIX . "customer SET customer_group_id = '" . (int)$data['customer_group_id'] . "', firstname = '" . $this->db->escape($data['firstname']) . "', lastname = '" . $this->db->escape($data['lastname']) . "', email = '" . $this->db->escape($data['email']) . "', telephone = '" . $this->db->escape($data['telephone']) . "', custom_field = '" . $this->db->escape(isset($data['custom_field']) ? json_encode($data['custom_field']) : json_encode(array())) . "', newsletter = '" . (int)$data['newsletter'] . "', salt = '" . $this->db->escape($salt = token(9)) . "', password = '" . $this->db->escape(sha1($salt . sha1($salt . sha1($data['password'])))) . "', status = '" . (int)$data['status'] . "', safe = '" . (int)$data['safe'] . "', date_added = NOW(), date_updated = NOW()");
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[ $this->db->query("UPDATE " . DB_PREFIX . "customer SET customer_group_id = '" . (int)$data['customer_group_id'] . "', firstname = '" . $this->db->escape($data['firstname']) . "', lastname = '" . $this->db->escape($data['lastname']) . "', email = '" . $this->db->escape($data['email']) . "', telephone = '" . $this->db->escape($data['telephone']) . "', custom_field = '" . $this->db->escape(isset($data['custom_field']) ? json_encode($data['custom_field']) : json_encode(array())) . "', newsletter = '" . (int)$data['newsletter'] . "', status = '" . (int)$data['status'] . "', safe = '" . (int)$data['safe'] . "' WHERE customer_id = '" . (int)$customer_id . "'"); ]]></search>
+            <add position="replace"><![CDATA[ 
+            $this->db->query("UPDATE " . DB_PREFIX . "customer SET customer_group_id = '" . (int)$data['customer_group_id'] . "', firstname = '" . $this->db->escape($data['firstname']) . "', lastname = '" . $this->db->escape($data['lastname']) . "', email = '" . $this->db->escape($data['email']) . "', telephone = '" . $this->db->escape($data['telephone']) . "', custom_field = '" . $this->db->escape(isset($data['custom_field']) ? json_encode($data['custom_field']) : json_encode(array())) . "', newsletter = '" . (int)$data['newsletter'] . "', status = '" . (int)$data['status'] . "', safe = '" . (int)$data['safe'] . "', date_updated = '" . $this->db->escape($data['date_updated']) . "' WHERE customer_id = '" . (int)$customer_id . "'");
 		]]></add>
         </operation>
     </file>
@@ -84,6 +114,19 @@
 
         return $query->row['total'];
     }
+		]]></add>
+        </operation>
+    </file>
+    <file path="admin/view/template/customer/customer_form.twig">
+        <operation>
+            <search><![CDATA[ <legend>{{ text_other }}</legend> ]]></search>
+            <add position="after"><![CDATA[ 
+			<div class="form-group">
+                          <label class="col-sm-2 control-label" for="input-safe">{{ entry_date_update }}</label>
+                          <div class="col-sm-10">
+                              <input type="date" name="date_updated" id="input-date_updated" value="{{ date_updated }}" min="2024-01-01" class="form-control"/>
+                </div>
+            </div>
 		]]></add>
         </operation>
     </file>

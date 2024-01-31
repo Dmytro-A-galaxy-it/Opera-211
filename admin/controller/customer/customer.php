@@ -787,6 +787,12 @@ class ControllerCustomerCustomer extends Controller {
 			$data['safe'] = 0;
 		}
 
+		if (isset($this->request->post['date_updated'])) {
+			$data['date_updated'] = $this->request->post['date_updated'];
+		} else {
+			$data['date_updated'] = $customer_info['date_updated'] ?? date('Y-m-d');
+		}
+
 		if (isset($this->request->post['password'])) {
 			$data['password'] = $this->request->post['password'];
 		} else {

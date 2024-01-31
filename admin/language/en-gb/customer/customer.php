@@ -52,6 +52,7 @@ $_['entry_newsletter']          = 'Newsletter';
 $_['entry_status']              = 'Status';
 $_['entry_approved']            = 'Approved';
 $_['entry_safe']                = 'Safe';
+$_['entry_date_update']         = 'Date Update';
 $_['entry_password']            = 'Password';
 $_['entry_confirm']             = 'Confirm';
 $_['entry_company']             = 'Company';

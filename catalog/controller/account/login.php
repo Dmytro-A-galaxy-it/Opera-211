@@ -190,7 +190,7 @@ class ControllerAccountLogin extends Controller {
 					$nowDate = new DateTime();
 		
 					$customer_getId = $this->model_account_customer->getCustomer($customer_id);
-					$customerDate = new DateTime($customer_getId['date_added']);
+					$customerDate = new DateTime($customer_getId['date_updated']);
 		
 					$diffDate = $nowDate->diff($customerDate);
 		
